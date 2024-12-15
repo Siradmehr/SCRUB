@@ -92,7 +92,7 @@ if __name__ == '__main__':
                         help='Use data augmentation')
     parser.add_argument('--quiet', action='store_true', default=False,
                         help='evaluation per epoch')
-    parser.add_argument('--batch-size', type=int, default=128, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=16, metavar='N',
                         help='input batch size for training (default: 128)')
     parser.add_argument('--dataset', default='mnist')
     parser.add_argument('--dataroot', type=str, default='data/')
@@ -179,7 +179,8 @@ if __name__ == '__main__':
     
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if use_cuda else "cpu")
-
+    args.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    print({args.device})
     os.makedirs('checkpoints', exist_ok=True)
 
     train_loader, valid_loader, test_loader = datasets.get_loaders(args.dataset, class_to_replace=args.forget_class,
@@ -219,7 +220,6 @@ if __name__ == '__main__':
     criterion = torch.nn.CrossEntropyLoss().to(args.device) if args.lossfn=='ce' else torch.nn.MSELoss().to(args.device)
     optimizer = optim.SGD(model.parameters(),lr=args.lr,momentum=0.9,weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.step_size, gamma=0.1, last_epoch=-1)
-
     train_time = 0
     for epoch in tqdm(range(args.epochs), desc="Training"):
         #adjust_learning_rate(optimizer,epoch)
